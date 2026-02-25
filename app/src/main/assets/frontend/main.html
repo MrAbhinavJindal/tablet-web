@@ -160,6 +160,11 @@
         font-weight: bold;
     }
 
+    .date-text {
+        font-size: clamp(14px, 1.5vw, 20px);
+        font-weight: bold;
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
@@ -179,6 +184,11 @@
 
     td {
         font-size: clamp(12px, 1.2vw, 16px);
+    }
+
+    .past-event {
+        opacity: 0.4;
+        text-decoration: line-through;
     }
 
 </style>
@@ -224,7 +234,7 @@
 <div class="container">
     <div class="weather-card">
         <div class="country">📅 Date</div>
-        <div class="weather" id="current-date">Loading...</div>
+        <div class="date-text" id="current-date">Loading...</div>
     </div>
 
     <div class="weather-card">
@@ -318,12 +328,38 @@ async function fetchCalendar() {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No events</td></tr>';
         } else {
             tbody.innerHTML = data.events.map(e => 
-                `<tr><td>${e.date}</td><td>${e.subject}</td><td>${e.start}</td><td>${e.end}</td></tr>`
+                `<tr data-end="${e.end}" data-date="${e.date}"><td>${e.date}</td><td>${e.subject}</td><td>${e.start}</td><td>${e.end}</td></tr>`
             ).join('');
+            updatePastEvents();
         }
     } catch {
         document.getElementById('calendar-body').innerHTML = '<tr><td colspan="4" style="text-align:center">Error loading</td></tr>';
     }
+}
+
+function updatePastEvents() {
+    const now = new Date();
+    const rows = document.querySelectorAll('#calendar-body tr[data-end]');
+    rows.forEach(row => {
+        const eventDate = row.getAttribute('data-date');
+        const eventEnd = row.getAttribute('data-end');
+        const today = now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }).replace(',', '');
+        
+        if (eventDate === today) {
+            const endTime = new Date();
+            const [time, period] = eventEnd.split(' ');
+            let [hours, minutes] = time.split(':').map(Number);
+            if (period === 'PM' && hours !== 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+            endTime.setHours(hours, minutes, 0, 0);
+            
+            if (now > endTime) {
+                row.classList.add('past-event');
+            } else {
+                row.classList.remove('past-event');
+            }
+        }
+    });
 }
 
 async function fetchDaily() {
@@ -378,8 +414,9 @@ fetchAttendance();
 fetchCalendar();
 fetchDaily();
 setInterval(fetchWeather, 300000);
-setInterval(fetchBattery, 30000);
-setInterval(fetchCalendar, 300000);
+setInterval(fetchBattery, 5000);
+setInterval(fetchCalendar, 1800000);
+setInterval(updatePastEvents, 60000);
 
 const volumeSlider = document.getElementById('volume-slider');
 const volumeValue = document.getElementById('volume-value');
