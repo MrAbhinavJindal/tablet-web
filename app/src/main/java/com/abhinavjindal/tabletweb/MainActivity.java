@@ -26,7 +26,7 @@ public class MainActivity extends Activity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         
         webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl("file:///android_asset/frontend/main.html");
+        webView.loadUrl("http://localhost:8000/frontend/main.html");
     }
     
     @Override
