@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connection Test</title>
+<style>
+body { font-family: Arial; padding: 20px; background: #243B55; color: white; }
+.test { margin: 20px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; }
+</style>
+</head>
+<body>
+<h1>Connection Test</h1>
+<script src="config.js"></script>
+<div class="test">
+<h3>Config URL:</h3>
+<p id="url"></p>
+</div>
+<div class="test">
+<h3>Test Result:</h3>
+<p id="result">Testing...</p>
+</div>
+<script>
+document.getElementById('url').innerText = API_BASE_URL;
+
+fetch(`${API_BASE_URL}/weather`)
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('result').innerText = 'SUCCESS: ' + JSON.stringify(d);
+  })
+  .catch(e => {
+    document.getElementById('result').innerText = 'ERROR: ' + e.message;
+  });
+</script>
+</body>
+</html>

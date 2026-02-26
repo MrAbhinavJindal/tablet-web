@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Responsive Horizontal World Clock</title>
+
+<style>
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', sans-serif;
+        background: linear-gradient(135deg, #141E30, #243B55);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
+        padding: 1vh;
+        color: white;
+        overflow: hidden;
+    }
+
+    .container {
+        display: flex;
+        width: 100%;
+        gap: 1vh;
+        margin-bottom: 1vh;
+    }
+
+    .clock-card {
+        flex: 1;
+        background: rgba(255,255,255,0.12);
+        backdrop-filter: blur(10px);
+        border-radius: 1vh;
+        padding: 1vh;
+        text-align: center;
+        box-shadow: 0 0.5vh 1vh rgba(0,0,0,0.3);
+        transition: 0.3s ease;
+    }
+
+    .weather-card {
+        flex: 1;
+        background: rgba(255,255,255,0.12);
+        backdrop-filter: blur(10px);
+        border-radius: 1vh;
+        padding: 1vh;
+        text-align: center;
+        box-shadow: 0 0.5vh 1vh rgba(0,0,0,0.3);
+    }
+
+    .calendar-card {
+        width: 100%;
+        background: rgba(255,255,255,0.12);
+        backdrop-filter: blur(10px);
+        border-radius: 1vh;
+        padding: 1vh;
+        box-shadow: 0 0.5vh 1vh rgba(0,0,0,0.3);
+        max-height: 25vh;
+        overflow-y: auto;
+        margin-bottom: 1vh;
+    }
+
+    .volume-card {
+        width: 100%;
+        background: rgba(255,255,255,0.12);
+        backdrop-filter: blur(10px);
+        border-radius: 1vh;
+        padding: 1vh;
+        box-shadow: 0 0.5vh 1vh rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        gap: 1vh;
+    }
+
+    .mic-button {
+        width: 5vh;
+        height: 5vh;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 0.5vh 1vh rgba(0,0,0,0.3);
+        transition: 0.3s ease;
+    }
+
+    .mic-button:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    .mic-button.muted {
+        opacity: 0.4;
+        filter: grayscale(100%);
+    }
+
+    .paint-icon {
+        position: fixed;
+        bottom: 1vh;
+        right: 1vh;
+        width: 5vh;
+        height: 5vh;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 0.5vh 1vh rgba(0,0,0,0.3);
+    }
+
+    .paint-icon:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    .volume-slider {
+        flex: 1;
+        height: 0.5vw;
+        -webkit-appearance: none;
+        appearance: none;
+        background: rgba(255,255,255,0.3);
+        border-radius: 0.5vw;
+        outline: none;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 2vw;
+        height: 2vw;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .country {
+        font-size: clamp(14px, 1.5vw, 20px);
+        font-weight: 600;
+        margin-bottom: 1vw;
+        letter-spacing: 0.1vw;
+    }
+
+    .time {
+        font-size: clamp(22px, 3vw, 48px);
+        font-weight: bold;
+    }
+
+    .date {
+        margin-top: 0.8vw;
+        font-size: clamp(12px, 1.2vw, 16px);
+        opacity: 0.85;
+    }
+
+    .weather {
+        font-size: clamp(18px, 2vw, 28px);
+        font-weight: bold;
+    }
+
+    .date-text {
+        font-size: clamp(14px, 1.5vw, 20px);
+        font-weight: bold;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0.5vh;
+    }
+
+    th, td {
+        padding: 0.5vh;
+        text-align: left;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+
+    th {
+        font-weight: 600;
+        font-size: clamp(14px, 1.3vw, 18px);
+    }
+
+    td {
+        font-size: clamp(12px, 1.2vw, 16px);
+    }
+
+    .past-event {
+        opacity: 0.4;
+        text-decoration: line-through;
+    }
+
+</style>
+</head>
+
+<body>
+
+<script src="config.js"></script>
+
+<div class="container" style="margin-top: 0;">
+    <div class="clock-card" style="flex: 0.5;">
+        <div class="country">💭 Thought of the Day</div>
+        <div class="date" id="quote" style="margin-top: 0.5vh;">Loading...</div>
+    </div>
+
+    <div class="clock-card" style="flex: 0.5;">
+        <div class="country">📖 Word of the Day</div>
+        <div class="time" style="font-size: clamp(18px, 2vw, 32px);" id="word">Loading...</div>
+        <div class="date" id="meaning"></div>
+        <div class="date" id="sentence" style="font-style: italic; margin-top: 0.3vh;"></div>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="clock-card">
+        <div class="country">🇮🇳 India (IST)</div>
+        <div class="time" id="india-time"></div>
+    </div>
+
+    <div class="clock-card">
+        <div class="country">🇨🇭 Switzerland</div>
+        <div class="time" id="swiss-time"></div>
+    </div>
+
+    <div class="clock-card">
+        <div class="country">🇬🇧 United Kingdom</div>
+        <div class="time" id="uk-time"></div>
+    </div>
+
+</div>
+
+<div class="container">
+    <div class="weather-card">
+        <div class="country">📅 Date</div>
+        <div class="date-text" id="current-date">Loading...</div>
+    </div>
+
+    <div class="weather-card">
+        <div class="country">🌤️ Weather</div>
+        <div class="weather" id="weather">Loading...</div>
+    </div>
+
+    <div class="weather-card">
+        <div class="country">🔋 Battery</div>
+        <div class="weather" id="battery">Loading...</div>
+    </div>
+
+    <div class="weather-card">
+        <div class="country">🕒 Attendance</div>
+        <div class="weather" id="attendance">Loading...</div>
+    </div>
+</div>
+
+<div class="calendar-card" style="max-height: 15vh;">
+    <div class="country">📝 Notes</div>
+    <textarea id="notes" placeholder="Type your notes here..." style="width: 100%; height: 10vh; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 0.5vh; padding: 1vh; color: white; font-family: 'Segoe UI', sans-serif; font-size: clamp(12px, 1.2vw, 16px); resize: none; outline: none;"></textarea>
+</div>
+
+<div class="calendar-card">
+    <div class="country">📅 Calendar Events</div>
+    <table id="calendar-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Subject</th>
+                <th>Start</th>
+                <th>End</th>
+            </tr>
+        </thead>
+        <tbody id="calendar-body">
+            <tr><td colspan="4" style="text-align:center">Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="volume-card">
+    <div class="country">🔊 Volume</div>
+    <input type="range" min="0" max="100" value="50" class="volume-slider" id="volume-slider">
+    <div class="country" id="volume-value">50</div>
+    <button class="mic-button" id="mic-button" onclick="toggleMic()">
+        <img src="icons/mic.png" style="width: 3vh; height: 3vh;">
+    </button>
+</div>
+
+<div class="paint-icon" onclick="window.location.href='paint.html'">
+    <img src="icons/paint.png" style="width: 3vh; height: 3vh;">
+</div>
+
+<script>
+async function fetchWeather() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/weather`);
+        const data = await response.json();
+        const aqiText = data.aqi !== '--' ? ` | PM2.5: ${data.aqi}` : '';
+        document.getElementById('weather').innerText = data.weather + aqiText;
+    } catch {
+        document.getElementById('weather').innerText = '--';
+    }
+}
+
+async function fetchBattery() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/battery`);
+        const data = await response.json();
+        if (data.battery === '--') {
+            document.getElementById('battery').innerText = '--';
+        } else {
+            const icon = data.plugged ? '🔌' : '🔋';
+            document.getElementById('battery').innerText = `${icon} ${data.percent}%`;
+        }
+    } catch {
+        document.getElementById('battery').innerText = '--';
+    }
+}
+
+async function fetchAttendance() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/attendance`);
+        const data = await response.json();
+        document.getElementById('attendance').innerText = data.attendance;
+    } catch {
+        document.getElementById('attendance').innerText = '--';
+    }
+}
+
+async function fetchCalendar() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/calendar`);
+        const data = await response.json();
+        const tbody = document.getElementById('calendar-body');
+        if (data.events.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No events</td></tr>';
+        } else {
+            tbody.innerHTML = data.events.map(e => {
+                const isCanceled = e.subject.startsWith('Canceled:');
+                const rowClass = isCanceled ? 'class="past-event"' : '';
+                return `<tr ${rowClass} data-end="${e.end}" data-date="${e.date}"><td>${e.date}</td><td>${e.subject}</td><td>${e.start}</td><td>${e.end}</td></tr>`;
+            }).join('');
+            updatePastEvents();
+        }
+    } catch {
+        document.getElementById('calendar-body').innerHTML = '<tr><td colspan="4" style="text-align:center">Error loading</td></tr>';
+    }
+}
+
+function updatePastEvents() {
+    const now = new Date();
+    const rows = document.querySelectorAll('#calendar-body tr[data-end]');
+    rows.forEach(row => {
+        const eventDate = row.getAttribute('data-date');
+        const eventEnd = row.getAttribute('data-end');
+        const today = now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }).replace(',', '');
+        
+        if (eventDate === today) {
+            const endTime = new Date();
+            const [time, period] = eventEnd.split(' ');
+            let [hours, minutes] = time.split(':').map(Number);
+            if (period === 'PM' && hours !== 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+            endTime.setHours(hours, minutes, 0, 0);
+            
+            if (now > endTime) {
+                row.classList.add('past-event');
+            } else {
+                row.classList.remove('past-event');
+            }
+        }
+    });
+}
+
+async function fetchDaily() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/daily`);
+        const data = await response.json();
+        document.getElementById('quote').innerText = data.quote;
+        document.getElementById('word').innerText = data.word;
+        document.getElementById('meaning').innerText = data.meaning;
+        document.getElementById('sentence').innerText = `"${data.sentence}"`;
+    } catch {
+        document.getElementById('quote').innerText = '--';
+        document.getElementById('word').innerText = '--';
+    }
+}
+
+async function loadNotes() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/notes`);
+        const data = await response.json();
+        document.getElementById('notes').value = data.content;
+    } catch {}
+}
+
+let saveTimeout;
+const notesArea = document.getElementById('notes');
+notesArea.addEventListener('input', () => {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(async () => {
+        try {
+            await fetch(`${API_BASE_URL}/notes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: notesArea.value })
+            });
+        } catch {}
+    }, 1000);
+});
+
+function updateTime() {
+    const timeOptions = { 
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    };
+
+    const dateOptions = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    };
+
+    const now = new Date();
+
+    document.getElementById("india-time").innerText =
+        now.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", ...timeOptions });
+
+    document.getElementById("swiss-time").innerText =
+        now.toLocaleTimeString("en-CH", { timeZone: "Europe/Zurich", ...timeOptions });
+
+    document.getElementById("uk-time").innerText =
+        now.toLocaleTimeString("en-GB", { timeZone: "Europe/London", ...timeOptions });
+
+    document.getElementById("current-date").innerText =
+        now.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", ...dateOptions });
+}
+
+setInterval(updateTime, 1000);
+updateTime();
+fetchWeather();
+fetchBattery();
+fetchAttendance();
+fetchCalendar();
+fetchDaily();
+loadNotes();
+setInterval(fetchWeather, 300000);
+setInterval(fetchBattery, 5000);
+setInterval(fetchCalendar, 1800000);
+setInterval(updatePastEvents, 60000);
+
+const volumeSlider = document.getElementById('volume-slider');
+const volumeValue = document.getElementById('volume-value');
+
+volumeSlider.addEventListener('input', async (e) => {
+    const level = e.target.value;
+    volumeValue.innerText = level;
+    try {
+        await fetch(`${API_BASE_URL}/volume/${level}`, { method: 'POST' });
+    } catch {}
+});
+
+async function toggleMic() {
+    const micButton = document.getElementById('mic-button');
+    try {
+        await fetch(`${API_BASE_URL}/mic/toggle`, { method: 'POST' });
+        micButton.classList.toggle('muted');
+    } catch {}
+}
+</script>
+
+</body>
+</html>
