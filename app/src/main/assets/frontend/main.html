@@ -294,7 +294,8 @@ async function fetchWeather() {
         const response = await fetch(`${API_BASE_URL}/weather`);
         const data = await response.json();
         const aqiText = data.aqi !== '--' ? ` | PM2.5: ${data.aqi}` : '';
-        document.getElementById('weather').innerText = data.weather + aqiText;
+        const newText = data.weather + aqiText;
+        document.getElementById('weather').innerText = newText;
     } catch {
         document.getElementById('weather').innerText = '--';
     }
@@ -308,7 +309,8 @@ async function fetchBattery() {
             document.getElementById('battery').innerText = '--';
         } else {
             const icon = data.plugged ? '🔌' : '🔋';
-            document.getElementById('battery').innerText = `${icon} ${data.percent}%`;
+            const newText = `${icon} ${data.percent}%`;
+            document.getElementById('battery').innerText = newText;
         }
     } catch {
         document.getElementById('battery').innerText = '--';
@@ -446,7 +448,7 @@ fetchAttendance();
 fetchCalendar();
 fetchDaily();
 loadNotes();
-setInterval(fetchWeather, 300000);
+setInterval(fetchWeather, 1800000);
 setInterval(fetchBattery, 5000);
 setInterval(fetchCalendar, 1800000);
 setInterval(updatePastEvents, 60000);
