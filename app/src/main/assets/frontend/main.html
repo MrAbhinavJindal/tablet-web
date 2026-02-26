@@ -333,11 +333,12 @@ async function fetchCalendar() {
         if (data.events.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No events</td></tr>';
         } else {
-            tbody.innerHTML = data.events.map(e => {
+            const newHTML = data.events.map(e => {
                 const isCanceled = e.subject.startsWith('Canceled:');
                 const rowClass = isCanceled ? 'class="past-event"' : '';
                 return `<tr ${rowClass} data-end="${e.end}" data-date="${e.date}"><td>${e.date}</td><td>${e.subject}</td><td>${e.start}</td><td>${e.end}</td></tr>`;
             }).join('');
+            tbody.innerHTML = newHTML;
             updatePastEvents();
         }
     } catch {
