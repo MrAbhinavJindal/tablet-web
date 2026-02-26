@@ -54,6 +54,36 @@
         border-radius: 0.5vw;
         cursor: pointer;
     }
+    
+    .color-palette {
+        position: fixed;
+        bottom: 10vh;
+        left: 50%;
+        transform: translateX(-50%);
+        display: none;
+        gap: 1vw;
+        padding: 1vw;
+        background: rgba(0,0,0,0.7);
+        border-radius: 1vw;
+        backdrop-filter: blur(10px);
+    }
+    
+    .color-palette.show {
+        display: flex;
+    }
+    
+    .color-option {
+        width: 4vw;
+        height: 4vw;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid white;
+        transition: transform 0.2s;
+    }
+    
+    .color-option:hover {
+        transform: scale(1.2);
+    }
 </style>
 </head>
 <body>
@@ -62,9 +92,22 @@
 
 <canvas id="canvas"></canvas>
 
+<div class="color-palette" id="colorPalette">
+    <div class="color-option" style="background-color: #000000" onclick="selectColor('#000000')"></div>
+    <div class="color-option" style="background-color: #FF0000" onclick="selectColor('#FF0000')"></div>
+    <div class="color-option" style="background-color: #00FF00" onclick="selectColor('#00FF00')"></div>
+    <div class="color-option" style="background-color: #0000FF" onclick="selectColor('#0000FF')"></div>
+    <div class="color-option" style="background-color: #FFFF00" onclick="selectColor('#FFFF00')"></div>
+    <div class="color-option" style="background-color: #FF00FF" onclick="selectColor('#FF00FF')"></div>
+    <div class="color-option" style="background-color: #00FFFF" onclick="selectColor('#00FFFF')"></div>
+    <div class="color-option" style="background-color: #FFA500" onclick="selectColor('#FFA500')"></div>
+    <div class="color-option" style="background-color: #800080" onclick="selectColor('#800080')"></div>
+    <div class="color-option" style="background-color: #FFFFFF" onclick="selectColor('#FFFFFF')"></div>
+</div>
+
 <div class="controls">
     <button onclick="clearCanvas()"><img src="icons/new.png" style="width:2.5vw;height:2.5vw"></button>
-    <button onclick="document.getElementById('colorPicker').click()"><img src="icons/colors.png" style="width:2.5vw;height:2.5vw"></button>
+    <button onclick="toggleColorPalette()"><img src="icons/colors.png" style="width:2.5vw;height:2.5vw"></button>
     <input type="color" id="colorPicker" value="#000000" style="display:none">
     <button onclick="saveCanvas()"><img src="icons/save.png" style="width:2.5vw;height:2.5vw"></button>
     <button onclick="goBack()"><img src="icons/back.png" style="width:2.5vw;height:2.5vw"></button>
@@ -137,6 +180,16 @@ canvas.addEventListener('touchend', (e) => {
 
 function clearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function toggleColorPalette() {
+    const palette = document.getElementById('colorPalette');
+    palette.classList.toggle('show');
+}
+
+function selectColor(color) {
+    currentColor = color;
+    document.getElementById('colorPalette').classList.remove('show');
 }
 
 async function saveCanvas() {

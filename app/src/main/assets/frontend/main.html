@@ -156,7 +156,7 @@
     }
 
     .weather {
-        font-size: clamp(18px, 2vw, 28px);
+        font-size: clamp(16px, 1.8vw, 24px);
         font-weight: bold;
     }
 
@@ -189,6 +189,10 @@
     .past-event {
         opacity: 0.4;
         text-decoration: line-through;
+    }
+
+    .ongoing-event {
+        background-color: rgba(255, 255, 0, 0.3);
     }
 
 </style>
@@ -338,7 +342,7 @@ async function fetchCalendar() {
             const newHTML = data.events.map(e => {
                 const isCanceled = e.subject.startsWith('Canceled:');
                 const rowClass = isCanceled ? 'class="past-event"' : '';
-                return `<tr ${rowClass} data-end="${e.end}" data-date="${e.date}"><td>${e.date}</td><td>${e.subject}</td><td>${e.start}</td><td>${e.end}</td></tr>`;
+                return `<tr ${rowClass} data-end="${e.end}" data-start="${e.start}" data-date="${e.date}"><td>${e.date}</td><td>${e.subject}</td><td>${e.start}</td><td>${e.end}</td></tr>`;
             }).join('');
             tbody.innerHTML = newHTML;
             updatePastEvents();
@@ -352,22 +356,37 @@ function updatePastEvents() {
     const now = new Date();
     const rows = document.querySelectorAll('#calendar-body tr[data-end]');
     rows.forEach(row => {
+        // Skip canceled events - they stay greyed out
+        if (row.classList.contains('past-event')) {
+            return;
+        }
+        
         const eventDate = row.getAttribute('data-date');
+        const eventStart = row.getAttribute('data-start');
         const eventEnd = row.getAttribute('data-end');
         const today = now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }).replace(',', '');
         
         if (eventDate === today) {
-            const endTime = new Date();
-            const [time, period] = eventEnd.split(' ');
-            let [hours, minutes] = time.split(':').map(Number);
-            if (period === 'PM' && hours !== 12) hours += 12;
-            if (period === 'AM' && hours === 12) hours = 0;
-            endTime.setHours(hours, minutes, 0, 0);
+            const parseTime = (timeStr) => {
+                const [time, period] = timeStr.split(' ');
+                let [hours, minutes] = time.split(':').map(Number);
+                if (period === 'PM' && hours !== 12) hours += 12;
+                if (period === 'AM' && hours === 12) hours = 0;
+                const date = new Date();
+                date.setHours(hours, minutes, 0, 0);
+                return date;
+            };
             
-            if (now > endTime) {
+            const startTime = parseTime(eventStart);
+            const endTime = parseTime(eventEnd);
+            
+            if (now >= startTime && now <= endTime) {
+                row.classList.add('ongoing-event');
+            } else if (now > endTime) {
                 row.classList.add('past-event');
+                row.classList.remove('ongoing-event');
             } else {
-                row.classList.remove('past-event');
+                row.classList.remove('ongoing-event');
             }
         }
     });
