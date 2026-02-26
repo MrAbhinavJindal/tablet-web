@@ -1,16 +1,11 @@
 @echo off
-echo Building APK locally...
-call gradlew.bat assembleDebug
+echo Pushing to GitHub to trigger build...
+git add .
+git commit -m "Trigger APK build"
+git push
 
-if exist app\build\outputs\apk\debug\app-debug.apk (
-    echo.
-    echo Build successful!
-    copy /Y app\build\outputs\apk\debug\app-debug.apk app-debug.apk
-    echo APK copied to: app-debug.apk
-) else (
-    echo.
-    echo Build failed!
-)
-
+echo.
+echo Build triggered! Check status at:
+echo https://github.com/MrAbhinavJindal/tablet-web/actions
 echo.
 pause
