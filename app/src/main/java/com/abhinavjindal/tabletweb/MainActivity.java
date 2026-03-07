@@ -42,10 +42,10 @@ public class MainActivity extends Activity {
     
     private boolean isReachable(String urlString) {
         try {
-            URL url = new URL(urlString);
+            URL url = new URL(urlString + "/weather");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setConnectTimeout(1000);
-            connection.setReadTimeout(1000);
+            connection.setConnectTimeout(2000);
+            connection.setReadTimeout(2000);
             connection.setRequestMethod("GET");
             connection.connect();
             int code = connection.getResponseCode();
