@@ -7,10 +7,11 @@ import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
 import android.view.WindowManager;
 import android.widget.Toast;
-import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
 import java.net.URL;
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceInfo;
+import java.net.InetAddress;
 
 public class MainActivity extends Activity {
     private WebView webView;
@@ -28,45 +29,44 @@ public class MainActivity extends Activity {
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         
         webView.setWebViewClient(new WebViewClient());
         
-        // Auto-discover server
+        runOnUiThread(() -> Toast.makeText(this, "Searching...", Toast.LENGTH_SHORT).show());
+        
         new Thread(() -> {
             String baseUrl = discoverServer();
             if (baseUrl != null) {
                 runOnUiThread(() -> {
                     webView.loadUrl(baseUrl + "/frontend/main.html");
-                    Toast.makeText(this, "Connected to: " + baseUrl, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Connected: " + baseUrl, Toast.LENGTH_SHORT).show();
                 });
             } else {
                 runOnUiThread(() -> 
-                    Toast.makeText(this, "Server not found. Connect via USB or check WiFi.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Server not found", Toast.LENGTH_LONG).show()
                 );
             }
         }).start();
     }
     
     private String discoverServer() {
-        // Try localhost first (wired mode)
+        // Try localhost
         if (isReachable("http://localhost:8000")) {
             return "http://localhost:8000";
         }
         
-        // Try to find server on local network
+        // Try mDNS discovery
         try {
-            String myIP = InetAddress.getLocalHost().getHostAddress();
-            String subnet = myIP.substring(0, myIP.lastIndexOf('.'));
-            
-            // Scan common IP range (last 50 IPs)
-            for (int i = 1; i <= 50; i++) {
-                String testIP = subnet + "." + i;
-                String testUrl = "http://" + testIP + ":8000";
-                if (isReachable(testUrl)) {
-                    return testUrl;
-                }
+            JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+            ServiceInfo serviceInfo = jmdns.getServiceInfo("_http._tcp.local.", "dashboard._http._tcp.local.", 3000);
+            if (serviceInfo != null) {
+                String host = serviceInfo.getHostAddresses()[0];
+                int port = serviceInfo.getPort();
+                jmdns.close();
+                return "http://" + host + ":" + port;
             }
+            jmdns.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -78,13 +78,14 @@ public class MainActivity extends Activity {
         try {
             URL url = new URL(urlString);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setConnectTimeout(500);
-            connection.setReadTimeout(500);
+            connection.setConnectTimeout(1000);
+            connection.setReadTimeout(1000);
+            connection.setRequestMethod("GET");
             connection.connect();
             int code = connection.getResponseCode();
             connection.disconnect();
-            return code == 200;
-        } catch (IOException e) {
+            return code >= 200 && code < 400;
+        } catch (Exception e) {
             return false;
         }
     }
