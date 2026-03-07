@@ -6,12 +6,11 @@ import android.webkit.WebView;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
 import android.view.WindowManager;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class MainActivity extends Activity {
     private WebView webView;
-    
-    // Set to "WIRED" for USB or "WIRELESS" for WiFi
-    private static final String TABLET_MODE = "WIRELESS";
     private static final String LAPTOP_IP = "192.168.1.15";
     
     @Override
@@ -31,11 +30,30 @@ public class MainActivity extends Activity {
         
         webView.setWebViewClient(new WebViewClient());
         
-        String baseUrl = TABLET_MODE.equals("WIRED") ? 
-            "http://localhost:8000" : 
-            "http://" + LAPTOP_IP + ":8000";
-        
-        webView.loadUrl(baseUrl + "/frontend/main.html");
+        // Auto-detect: try localhost first, then laptop IP
+        new Thread(() -> {
+            String baseUrl = isReachable("http://localhost:8000") ? 
+                "http://localhost:8000" : 
+                "http://" + LAPTOP_IP + ":8000";
+            
+            runOnUiThread(() -> webView.loadUrl(baseUrl + "/frontend/main.html"));
+        }).start();
+    }
+    
+    private boolean isReachable(String urlString) {
+        try {
+            URL url = new URL(urlString);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(1000);
+            connection.setReadTimeout(1000);
+            connection.setRequestMethod("GET");
+            connection.connect();
+            int code = connection.getResponseCode();
+            connection.disconnect();
+            return code >= 200 && code < 400;
+        } catch (Exception e) {
+            return false;
+        }
     }
     
     @Override
