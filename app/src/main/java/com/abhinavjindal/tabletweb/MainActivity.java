@@ -11,7 +11,7 @@ import java.net.URL;
 
 public class MainActivity extends Activity {
     private WebView webView;
-    private static final String LAPTOP_IP = "192.168.1.15";
+    private static final String LAPTOP_IP = "192.168.1.45";
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
