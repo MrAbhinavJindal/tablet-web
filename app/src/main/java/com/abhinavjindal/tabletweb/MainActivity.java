@@ -1,6 +1,7 @@
 package com.abhinavjindal.tabletweb;
 
 import android.app.Activity;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
@@ -9,6 +10,9 @@ import android.view.View;
 import android.view.WindowManager;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import org.json.JSONObject;
 
 public class MainActivity extends Activity {
     private WebView webView;
@@ -38,8 +42,53 @@ public class MainActivity extends Activity {
                 "http://localhost:8000" : 
                 "http://" + LAPTOP_IP + ":8000";
             
+            // Fetch orientation from server
+            applyOrientation(baseUrl);
+            
             runOnUiThread(() -> webView.loadUrl(baseUrl + "/frontend/main.html"));
         }).start();
+    }
+    
+    private void applyOrientation(String baseUrl) {
+        try {
+            URL url = new URL(baseUrl + "/orientation");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(3000);
+            conn.setReadTimeout(3000);
+            conn.setRequestMethod("GET");
+            
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            reader.close();
+            conn.disconnect();
+            
+            JSONObject json = new JSONObject(sb.toString());
+            String orientation = json.optString("orientation", "reversePortrait");
+            
+            runOnUiThread(() -> {
+                switch (orientation) {
+                    case "portrait":
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                        break;
+                    case "reversePortrait":
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
+                        break;
+                    case "landscape":
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                        break;
+                    case "reverseLandscape":
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+                        break;
+                }
+            });
+        } catch (Exception e) {
+            // Default to reversePortrait if server unreachable
+            runOnUiThread(() -> setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT));
+        }
     }
     
     private boolean isReachable(String urlString) {

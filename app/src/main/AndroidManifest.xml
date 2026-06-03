@@ -16,7 +16,7 @@
         
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="reversePortrait"
+            android:screenOrientation="unspecified"
             android:configChanges="orientation|screenSize"
             android:exported="true">
             <intent-filter>
